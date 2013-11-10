@@ -1,4 +1,4 @@
-# run: sudo ansible-playbook test.yaml -c local
+# run: sudo ansible-playbook selenium.yaml -c local
 
 ## Install Selenium Grid
 
