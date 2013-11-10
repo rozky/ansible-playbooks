@@ -1,0 +1,16 @@
+# run: sudo ansible-playbook test.yaml -c local
+
+## Install Selenium Grid
+
+- hosts: 127.0.0.1
+  connection: local
+  gather_facts: no 
+  tasks:
+  - name: download selenium server    
+    get_url: url=http://selenium.googlecode.com/files/selenium-server-standalone-2.37.0.jar dest=/opt
+
+  - name: create simlink for selenium server
+    file: src=/opt/selenium-server-standalone-2.37.0.jar dest=/opt/selenium-server.jar state=link
+
+  - name: copy selenium init.d script
+    copy: src=selenium.initscript dest=/etc/init.d/selenium mode=0755

@@ -1,0 +1,85 @@
+#!/bin/bash
+#
+# /etc/init.d/selenium -- startup script for the selenium grid (hub + 1 node)
+#
+
+HUB_PID_FILE="/tmp/selenium-hub.pid"
+NODE_PID_FILE="/tmp/selenium-node.pid"
+HUB_DESC="Selenium HUB"
+NODE_DESC="Selenium NODE"
+
+JAVA_BIN=/usr/bin/java
+SELENIUM_JAR=/opt/selenium-server.jar
+PORT=4445
+LOG_DIR=/tmp
+
+HUB_DAEMON_OPTS=" -jar $SELENIUM_JAR -role hub -port $PORT"
+NODE_DAEMON_OPTS=" -jar $SELENIUM_JAR -role node -hub http://localhost:$PORT/grid/register"
+
+# $1 - PID file location
+isProcessRunning() {
+   if [ -f "$1" ] && [ `ps -p $(cat $1) -o pid=` ]; then           	
+      return 0
+   else 
+      return 1
+   fi   
+}
+
+# Checks if a process identified by PID stored in .pid file is running or not ($1 - PID file location, $2 - process description)
+checkProcessStatus() {
+   if [ -f "$1" ] && [ `ps -p $(cat $1) -o pid=` ]; then           	
+      echo "$2 is running. PID = `cat $1`"		
+   else 
+      echo "$2 is NOT running."		
+   fi   
+}
+
+# Stop running process ($1 - PID file location, $2 - process description)
+stopProcess() {
+   echo -n "Stopping $2 ... "
+
+   start-stop-daemon --stop --quiet --pidfile "$1" 
+   rm -f "$1"
+   echo "stopped"
+}
+
+case "$1" in
+  start)
+	if isProcessRunning $HUB_PID_FILE; then
+	   echo "$HUB_DESC is already running"		
+  	   exit 1
+	fi
+
+        echo -n "Starting $HUB_DESC on port $PORT ... "
+
+	start-stop-daemon --start --quiet --no-close --background --pidfile $HUB_PID_FILE --make-pidfile \
+		--exec $JAVA_BIN -- $HUB_DAEMON_OPTS &> $LOG_DIR/selenium-hub.log 
+
+        echo "started. PID = `cat $HUB_PID_FILE`"
+
+	if isProcessRunning $NODE_PID_FILE; then
+	   echo "$NODE_DESC is already running"		
+  	   exit 1
+	fi
+        echo -n "Starting $NODE_DESC ... "
+
+	start-stop-daemon --start --quiet --no-close --background --pidfile $NODE_PID_FILE --make-pidfile \
+		--exec $JAVA_BIN -- $NODE_DAEMON_OPTS &> $LOG_DIR/selenium-node.log
+
+        echo "started. PID = `cat $NODE_PID_FILE`"
+        ;;
+  stop)
+	stopProcess $HUB_PID_FILE $HUB_DESC
+	stopProcess $NODE_PID_FILE $NODE_DESC
+        ;;
+  status)
+	checkProcessStatus $HUB_PID_FILE $HUB_DESC       
+	checkProcessStatus $NODE_PID_FILE $NODE_DESC
+        ;;
+  *)
+        echo "Usage: /etc/init.d/selenium {start|stop|status}" >&2
+        exit 1
+        ;;
+esac
+
+exit 0
