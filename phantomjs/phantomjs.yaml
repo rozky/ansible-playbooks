@@ -1,0 +1,18 @@
+## Install PhantomJS
+# tar jxf filename.tar.bz2
+
+- hosts: 127.0.0.1
+  connection: local
+  gather_facts: no 
+  tasks:
+  - name: download phantomjs 64-bit version    
+    get_url: url=https://phantomjs.googlecode.com/files/phantomjs-1.9.2-linux-x86_64.tar.bz2 dest=/opt
+
+  - name: unpack
+    command: tar jxf /opt/phantomjs-1.9.2-linux-x86_64.tar.bz2 -C /opt/
+
+  - name: create simlink in /opt
+    file: src=/opt/phantomjs-1.9.2-linux-x86_64 dest=/opt/phantomjs state=link mode=0755
+
+  - name: create simlink in ~/bin
+    file: src=/opt/phantomjs/bin/phantomjs dest=~/bin/phantomjs state=link group=$user owner=$user mode=0755

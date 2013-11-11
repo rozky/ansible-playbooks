@@ -17,4 +17,4 @@
     copy: src=selenium.initscript dest=/etc/init.d/selenium mode=0755
 
   - name: create easy execution script and place it on the path for quick access
-    copy: src=selenium.binscript dest=~/bin/selenium3 group=$user owner=$user mode=0755
+    copy: src=selenium.binscript dest=~/bin/selenium group=$user owner=$user mode=0755
